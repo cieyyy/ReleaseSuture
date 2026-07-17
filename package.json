@@ -1,0 +1,43 @@
+{
+  "name": "release-suture",
+  "version": "0.1.0",
+  "productName": "ReleaseSuture",
+  "private": true,
+  "type": "module",
+  "description": "Offline, read-only release evidence compiler for SQL, Kubernetes manifests, JARs, and web artifacts.",
+  "main": "desktop/main.js",
+  "author": "cieyyy and contributors",
+  "homepage": "https://github.com/cieyyy/ReleaseSuture#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cieyyy/ReleaseSuture.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cieyyy/ReleaseSuture/issues"
+  },
+  "keywords": [
+    "release-safety",
+    "offline-analysis",
+    "kubernetes",
+    "sql",
+    "software-supply-chain"
+  ],
+  "bin": {
+    "release-suture": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "scan:example": "node ./src/cli.js scan ./examples/risky-release --output ./tmp/example-report",
+    "check": "npm test && npm run scan:example",
+    "desktop:start": "electron .",
+    "desktop:package": "node ./scripts/package-desktop.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@electron/packager": "20.0.2",
+    "electron": "43.1.1"
+  }
+}

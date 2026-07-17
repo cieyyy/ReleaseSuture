@@ -1,0 +1,57 @@
+name: Bug report
+description: 报告可复现的问题；禁止提交真实生产数据或凭据
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。请只使用最小、脱敏、合成的复现材料。安全漏洞请使用 Private vulnerability reporting。
+
+  - type: input
+    id: version
+    attributes:
+      label: ReleaseSuture 版本
+      placeholder: 例如 0.1.0 或 commit SHA
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: 使用方式
+      options:
+        - CLI
+        - Windows 桌面版
+        - 测试或开发环境
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 问题描述
+      description: 实际结果与预期结果分别是什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 最小复现步骤
+      description: 不要粘贴生产配置、真实凭据、域名、IP、集群名或完整业务制品。
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 环境
+      placeholder: Windows 11 / Node.js 22.x
+
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: 数据确认
+      options:
+        - label: 我确认内容已经脱敏，不包含真实凭据、生产数据或组织内部标识。
+          required: true

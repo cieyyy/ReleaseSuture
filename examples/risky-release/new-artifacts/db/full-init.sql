@@ -1,0 +1,8 @@
+SET FOREIGN_KEY_CHECKS=0;
+DROP TABLE IF EXISTS models;
+CREATE TABLE models (
+  id bigint PRIMARY KEY,
+  name varchar(255) NOT NULL
+);
+INSERT INTO models VALUES (1, 'demo');
+SET FOREIGN_KEY_CHECKS=1;

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <title>ReleaseSuture · 离线发布体检台</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <strong>ReleaseSuture</strong>
+          <small>离线发布体检台</small>
+        </div>
+      </div>
+
+      <nav aria-label="应用状态">
+        <div class="nav-item active"><span class="nav-dot"></span>证据扫描</div>
+        <div class="nav-item"><span class="nav-dot"></span>风险报告</div>
+        <div class="nav-item"><span class="nav-dot"></span>发布顺序</div>
+      </nav>
+
+      <div class="safety-card">
+        <div class="safety-title"><span class="pulse-dot"></span>OFFLINE</div>
+        <p>无网络 · 无集群连接<br>无外部命令 · 无自动修改</p>
+      </div>
+
+      <div class="version">v0.1.0 Desktop</div>
+    </aside>
+
+    <main>
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">RELEASE EVIDENCE COMPILER</p>
+          <h1>发布材料，先体检再评审</h1>
+          <p class="subtitle">只分析你选择的本地脱敏副本，不接触集群和业务系统。</p>
+        </div>
+        <div class="security-badge"><span>✓</span> 安全边界已启用</div>
+      </header>
+
+      <section class="input-panel" aria-labelledby="scan-config-title">
+        <div class="section-heading">
+          <div>
+            <span class="step-number">01</span>
+            <h2 id="scan-config-title">选择离线材料</h2>
+          </div>
+          <span class="hint">只读输入 · 仅写报告</span>
+        </div>
+
+        <div class="path-grid">
+          <div class="path-card">
+            <label>证据目录</label>
+            <p>SQL、K8s YAML、JAR、前端 dist 的脱敏副本</p>
+            <div class="path-row">
+              <div class="path-value empty" id="case-path">尚未选择</div>
+              <button class="secondary-button" id="select-case" type="button">选择目录</button>
+            </div>
+          </div>
+
+          <div class="path-card">
+            <label>报告目录</label>
+            <p>只生成 report.json 和 report.md</p>
+            <div class="path-row">
+              <div class="path-value empty" id="output-path">尚未选择</div>
+              <button class="secondary-button" id="select-output" type="button">选择目录</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <div class="status-message" id="status-message" role="status">等待选择本地证据目录</div>
+          <button class="primary-button" id="run-scan" type="button" disabled>
+            <span class="button-icon">⌁</span>
+            <span id="run-label">开始离线鉴定</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="result-panel hidden" id="result-panel" aria-live="polite">
+        <div class="section-heading">
+          <div>
+            <span class="step-number">02</span>
+            <h2>鉴定结果</h2>
+          </div>
+          <span class="report-location" id="report-location"></span>
+        </div>
+
+        <div class="summary-grid">
+          <article class="decision-card" id="decision-card">
+            <span>发布评审状态</span>
+            <strong id="decision-value">—</strong>
+            <p id="decision-description">—</p>
+          </article>
+          <article class="metric critical"><span>Critical</span><strong id="critical-count">0</strong></article>
+          <article class="metric high"><span>High</span><strong id="high-count">0</strong></article>
+          <article class="metric medium"><span>Medium</span><strong id="medium-count">0</strong></article>
+          <article class="metric low"><span>Low</span><strong id="low-count">0</strong></article>
+        </div>
+
+        <div class="findings-header">
+          <div>
+            <h3>风险证据</h3>
+            <p id="finding-summary">共 0 项</p>
+          </div>
+          <div class="verified-label">✓ 本地文件已验证</div>
+        </div>
+        <div class="findings-list" id="findings-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./renderer.js"></script>
+</body>
+</html>

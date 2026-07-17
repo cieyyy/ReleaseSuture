@@ -1,0 +1,45 @@
+name: Feature request
+description: 建议新规则、输出格式或离线工作流
+title: "[Feature] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        新功能必须保持核心无网络、无子进程、无生产客户端和只读证据输入边界。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决的问题
+      description: 描述发布评审中的通用问题，不要包含真实业务信息。
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 说明输入、输出、规则边界和可能误报。
+    validations:
+      required: true
+
+  - type: textarea
+    id: safety
+    attributes:
+      label: 安全边界影响
+      description: 是否涉及网络、进程、文件写入、权限或证据目录外读取？
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 替代方案
+
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: 边界确认
+      options:
+        - label: 该建议不要求 ReleaseSuture 连接或操作集群、数据库、服务器或业务系统。
+          required: true
