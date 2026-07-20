@@ -59,7 +59,16 @@ test('desktop renderer and IPC use restrictive Electron security settings', asyn
   assert.match(html, /connect-src 'none'/);
   assert.match(html, /object-src 'none'/);
   assert.match(html, /frame-src 'none'/);
+  assert.match(html, /data-view="report"/);
+  assert.match(html, /data-view="plan"/);
+  assert.match(html, /data-view-panel="report"/);
+  assert.match(html, /data-view-panel="plan"/);
   assert.doesNotMatch(html, /https?:\/\//);
+  assert.match(renderer, /function showView\(/);
+  assert.match(renderer, /function renderReleasePlan\(/);
+  assert.match(renderer, /function focusFinding\(/);
+  assert.match(renderer, /state\.result = result/);
+  assert.match(renderer, /showView\('report'\)/);
   assert.doesNotMatch(renderer, /\b(?:fetch|WebSocket|XMLHttpRequest)\b/);
   assert.doesNotMatch(renderer, /\.innerHTML\s*=/);
 });

@@ -117,7 +117,7 @@ export async function scanCase(casePath) {
 
   const report = {
     schemaVersion: 1,
-    tool: { name: 'ReleaseSuture', version: '0.1.0' },
+    tool: { name: 'ReleaseSuture', version: '0.1.1' },
     generatedAt: new Date().toISOString(),
     safety: {
       mode: 'OFFLINE_READ_ONLY_ANALYSIS',
