@@ -1,0 +1,357 @@
+{
+  "schemaVersion": 1,
+  "tool": {
+    "name": "ReleaseSuture",
+    "version": "0.1.1"
+  },
+  "generatedAt": "2026-07-20T06:27:43.063Z",
+  "safety": {
+    "mode": "OFFLINE_READ_ONLY_ANALYSIS",
+    "networkAccess": "NOT_IMPLEMENTED",
+    "subprocessExecution": "NOT_IMPLEMENTED",
+    "externalWrites": "NOT_IMPLEMENTED",
+    "localWrites": "REPORT_FILES_ONLY"
+  },
+  "case": {
+    "path": "examples/risky-release"
+  },
+  "inventory": {
+    "files": [
+      {
+        "path": "new-artifacts/db/full-init.sql",
+        "scope": "target",
+        "kind": "sql",
+        "size": 199,
+        "sha256": "c12d10633e11526d550cee4eb42e47841c2c4e50bfb9427e2a1c0e5dc0963bf7"
+      },
+      {
+        "path": "new-artifacts/k8s/app.yaml",
+        "scope": "target",
+        "kind": "k8s-yaml",
+        "size": 341,
+        "sha256": "ec1e89cf50be1cedd0a6d29a865af82a06afb6f40a7702d1ab16d1ea8df55b29"
+      },
+      {
+        "path": "new-artifacts/web/assets/app.js",
+        "scope": "target",
+        "kind": "other",
+        "size": 75,
+        "sha256": "0feae4b9ef4d0c53269ae72a910f32cf74919fa44a66fc6e32807749826724b1"
+      },
+      {
+        "path": "new-artifacts/web/index.html",
+        "scope": "target",
+        "kind": "html",
+        "size": 230,
+        "sha256": "d411ab092513ef5290d0b3f3dc6e4804bcbea57a20ae23ee5bd477d2d4e87d82"
+      }
+    ],
+    "changes": []
+  },
+  "scannerData": {
+    "sql": {
+      "new-artifacts/db/full-init.sql": {
+        "dropStatements": 1,
+        "createTableStatements": 1,
+        "insertStatements": 1,
+        "alterStatements": 0
+      }
+    },
+    "k8s": {
+      "new-artifacts/k8s/app.yaml": [
+        {
+          "kind": "Deployment",
+          "name": "demo-api",
+          "namespace": "demo"
+        }
+      ]
+    },
+    "jars": {},
+    "html": {
+      "new-artifacts/web/index.html": [
+        {
+          "reference": "/missing-logo.svg",
+          "present": false
+        },
+        {
+          "reference": "/assets/app.js",
+          "present": true
+        }
+      ]
+    }
+  },
+  "findings": [
+    {
+      "id": "RS-SQL-001-69c8243b2e51",
+      "ruleId": "RS-SQL-001",
+      "title": "检测到破坏性 DROP 语句",
+      "severity": "critical",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "database",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/db/full-init.sql",
+        "line": 2,
+        "sha256": "c12d10633e11526d550cee4eb42e47841c2c4e50bfb9427e2a1c0e5dc0963bf7",
+        "excerpt": "DROP TABLE IF EXISTS models;"
+      },
+      "explanation": "目标 SQL 会删除表、数据库或 schema，不能作为现有数据库的增量升级脚本直接执行。",
+      "nextCommand": "rg -n -i '\\bDROP\\s+(TABLE|DATABASE|SCHEMA)\\b' <sql-file>",
+      "risk": "可能造成结构和数据不可恢复丢失，并中断依赖该对象的应用。",
+      "rollback": "执行前只能通过完整备份或快照保障恢复；执行后无法依赖普通应用回滚恢复数据。"
+    },
+    {
+      "id": "RS-SQL-007-395766544827",
+      "ruleId": "RS-SQL-007",
+      "title": "文件特征符合全量初始化/重建脚本",
+      "severity": "critical",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "database",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/db/full-init.sql",
+        "line": 2,
+        "sha256": "c12d10633e11526d550cee4eb42e47841c2c4e50bfb9427e2a1c0e5dc0963bf7",
+        "excerpt": "DROP TABLE IF EXISTS models;"
+      },
+      "explanation": "同一文件包含 1 个 DROP、1 个 CREATE TABLE 和 1 个 INSERT 起始行，不能当作增量升级脚本。",
+      "nextCommand": "rg -n -i '^(DROP|CREATE TABLE|INSERT INTO)' <sql-file>",
+      "risk": "导入现有数据库可能先清理结构和数据，再写入初始化数据。",
+      "rollback": "不要执行该文件；从新旧 schema 中单独生成、审核并测试最小增量迁移。"
+    },
+    {
+      "id": "RS-K8S-001-8bca086fa814",
+      "ruleId": "RS-K8S-001",
+      "title": "Deployment/demo-api 只有单副本",
+      "severity": "high",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "kubernetes",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/k8s/app.yaml",
+        "line": 7,
+        "sha256": "ec1e89cf50be1cedd0a6d29a865af82a06afb6f40a7702d1ab16d1ea8df55b29",
+        "excerpt": "replicas: 1"
+      },
+      "explanation": "单副本工作负载在重建、调度或镜像拉取期间没有可用副本兜底。",
+      "nextCommand": "kubectl get deployment demo-api -n <namespace> -o jsonpath='{.spec.replicas}{\"\\n\"}'",
+      "risk": "发布期间可能产生业务中断。",
+      "rollback": "保留旧镜像摘要和 Deployment 修订；发布前确认是否允许短暂停机。"
+    },
+    {
+      "id": "RS-K8S-002-ee1c608b5d36",
+      "ruleId": "RS-K8S-002",
+      "title": "Deployment/demo-api 使用 Recreate 策略",
+      "severity": "high",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "kubernetes",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/k8s/app.yaml",
+        "line": 9,
+        "sha256": "ec1e89cf50be1cedd0a6d29a865af82a06afb6f40a7702d1ab16d1ea8df55b29",
+        "excerpt": "type: Recreate"
+      },
+      "explanation": "Recreate 会先终止旧 Pod，再创建新 Pod；与单副本组合时必然形成不可用窗口。",
+      "nextCommand": "kubectl get deployment demo-api -n <namespace> -o jsonpath='{.spec.strategy.type}{\"\\n\"}'",
+      "risk": "新版本启动失败时，服务会保持不可用直到人工回滚。",
+      "rollback": "kubectl rollout undo deployment/demo-api -n <namespace>"
+    },
+    {
+      "id": "RS-K8S-003-51ca76f07d85",
+      "ruleId": "RS-K8S-003",
+      "title": "Deployment/demo-api 使用不可追溯镜像标签",
+      "severity": "high",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "kubernetes",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/k8s/app.yaml",
+        "line": 20,
+        "sha256": "ec1e89cf50be1cedd0a6d29a865af82a06afb6f40a7702d1ab16d1ea8df55b29",
+        "excerpt": "image: example.invalid/demo-api:latest"
+      },
+      "explanation": "缺少固定标签或使用 latest 会让同一清单在不同时间拉取不同镜像。",
+      "nextCommand": "kubectl get deployment demo-api -n <namespace> -o jsonpath='{.spec.template.spec.containers[*].image}{\"\\n\"}'",
+      "risk": "无法可靠复现版本，也无法证明回滚拉取的是原镜像。",
+      "rollback": "使用不可变版本标签并记录镜像 digest。"
+    },
+    {
+      "id": "RS-SQL-006-a76a73ab3004",
+      "ruleId": "RS-SQL-006",
+      "title": "SQL 暂时关闭外键检查",
+      "severity": "medium",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "database",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/db/full-init.sql",
+        "line": 1,
+        "sha256": "c12d10633e11526d550cee4eb42e47841c2c4e50bfb9427e2a1c0e5dc0963bf7",
+        "excerpt": "SET FOREIGN_KEY_CHECKS=0;"
+      },
+      "explanation": "关闭外键检查常见于全量导入脚本，也可能让不一致数据进入数据库。",
+      "nextCommand": "rg -n -i 'FOREIGN_KEY_CHECKS' <sql-file>",
+      "risk": "脚本失败或漏掉恢复语句时，连接会继续处于弱校验状态。",
+      "rollback": "确认同一连接中重新启用外键检查，并执行孤儿数据核验。"
+    },
+    {
+      "id": "RS-K8S-004-e3bb022adc36",
+      "ruleId": "RS-K8S-004",
+      "title": "Deployment/demo-api 缺少 readinessProbe",
+      "severity": "medium",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "kubernetes",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/k8s/app.yaml",
+        "line": 1,
+        "sha256": "ec1e89cf50be1cedd0a6d29a865af82a06afb6f40a7702d1ab16d1ea8df55b29",
+        "excerpt": "kind: Deployment; metadata.name: demo-api"
+      },
+      "explanation": "没有就绪探针时，Pod 启动后可能在应用尚未可用时接收流量。",
+      "nextCommand": "kubectl get deployment demo-api -n <namespace> -o yaml | rg -n 'readinessProbe'",
+      "risk": "发布初期可能出现 502/503 或请求失败。",
+      "rollback": "补充与真实健康端点一致的就绪探针；变更前保留原清单。"
+    },
+    {
+      "id": "RS-K8S-006-13e0b733f90f",
+      "ruleId": "RS-K8S-006",
+      "title": "Deployment/demo-api 未声明资源请求与限制",
+      "severity": "medium",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "kubernetes",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/k8s/app.yaml",
+        "line": 1,
+        "sha256": "ec1e89cf50be1cedd0a6d29a865af82a06afb6f40a7702d1ab16d1ea8df55b29",
+        "excerpt": "kind: Deployment; metadata.name: demo-api"
+      },
+      "explanation": "缺少 requests/limits 会降低调度可预测性，并放大节点资源争抢风险。",
+      "nextCommand": "kubectl get deployment demo-api -n <namespace> -o jsonpath='{.spec.template.spec.containers[*].resources}{\"\\n\"}'",
+      "risk": "高负载时可能挤压其他工作负载，或因调度估算失真导致节点不稳定。",
+      "rollback": "先观察历史用量，再逐步设置 requests 和 limits。"
+    },
+    {
+      "id": "RS-DIST-001-79d99a694927",
+      "ruleId": "RS-DIST-001",
+      "title": "HTML 引用了缺失的静态资源 /missing-logo.svg",
+      "severity": "medium",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "frontend",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/web/index.html",
+        "line": 5,
+        "sha256": "d411ab092513ef5290d0b3f3dc6e4804bcbea57a20ae23ee5bd477d2d4e87d82",
+        "excerpt": "href=\"/missing-logo.svg\""
+      },
+      "explanation": "在 new-artifacts/web/missing-logo.svg 未找到被引用文件。",
+      "nextCommand": "Test-Path -LiteralPath 'examples/risky-release\\new-artifacts\\web\\missing-logo.svg'",
+      "risk": "页面可能出现图标、脚本或样式 404；关键 JS 缺失时页面无法启动。",
+      "rollback": "补齐构建产物或删除错误引用，然后重新生成 dist。"
+    },
+    {
+      "id": "RS-K8S-005-7851e7e2d441",
+      "ruleId": "RS-K8S-005",
+      "title": "Deployment/demo-api 缺少 livenessProbe",
+      "severity": "low",
+      "confidence": "high",
+      "verification": "verified",
+      "phase": "kubernetes",
+      "scope": "target",
+      "evidence": {
+        "path": "new-artifacts/k8s/app.yaml",
+        "line": 1,
+        "sha256": "ec1e89cf50be1cedd0a6d29a865af82a06afb6f40a7702d1ab16d1ea8df55b29",
+        "excerpt": "kind: Deployment; metadata.name: demo-api"
+      },
+      "explanation": "进程存活但内部死锁时，Kubernetes 可能无法自动恢复。",
+      "nextCommand": "kubectl get deployment demo-api -n <namespace> -o yaml | rg -n 'livenessProbe'",
+      "risk": "部分应用失活场景不能被自动重启。",
+      "rollback": "先在测试环境验证探针阈值，避免错误探针引发重启循环。"
+    }
+  ],
+  "summary": {
+    "decision": "BLOCKED",
+    "severityCounts": {
+      "critical": 2,
+      "high": 3,
+      "medium": 4,
+      "low": 1,
+      "info": 0
+    },
+    "blockingFindingIds": [
+      "RS-SQL-001-69c8243b2e51",
+      "RS-SQL-007-395766544827",
+      "RS-K8S-001-8bca086fa814",
+      "RS-K8S-002-ee1c608b5d36",
+      "RS-K8S-003-51ca76f07d85"
+    ]
+  },
+  "releasePlan": [
+    {
+      "order": 1,
+      "phase": "identity",
+      "title": "人工确认离线材料的来源与目标环境",
+      "state": "manual",
+      "gate": "所有文件均为脱敏副本，SHA256 已记录，未使用任何在线连接。",
+      "blockers": []
+    },
+    {
+      "order": 2,
+      "phase": "database",
+      "title": "审查并验证最小增量数据库迁移",
+      "state": "blocked",
+      "gate": "禁止使用全量初始化脚本；必须重新生成最小增量迁移。",
+      "blockers": [
+        "RS-SQL-001-69c8243b2e51",
+        "RS-SQL-007-395766544827"
+      ]
+    },
+    {
+      "order": 3,
+      "phase": "kubernetes",
+      "title": "人工审核 K8s 目标清单",
+      "state": "blocked",
+      "gate": "副本、策略、镜像摘要、探针和资源声明满足目标环境要求。",
+      "blockers": [
+        "RS-K8S-001-8bca086fa814",
+        "RS-K8S-002-ee1c608b5d36",
+        "RS-K8S-003-51ca76f07d85"
+      ]
+    },
+    {
+      "order": 4,
+      "phase": "frontend",
+      "title": "验证前端静态资源完整性",
+      "state": "manual",
+      "gate": "index.html 引用资源完整，接口协议和基础路径经过离线审核。",
+      "blockers": []
+    },
+    {
+      "order": 5,
+      "phase": "handoff",
+      "title": "交付人工变更评审，不自动执行任何操作",
+      "state": "blocked",
+      "gate": "ReleaseSuture 只生成证据包；连接、修改和发布不属于工具能力。",
+      "blockers": [
+        "RS-SQL-001-69c8243b2e51",
+        "RS-SQL-007-395766544827",
+        "RS-K8S-001-8bca086fa814",
+        "RS-K8S-002-ee1c608b5d36",
+        "RS-K8S-003-51ca76f07d85"
+      ]
+    }
+  ]
+}

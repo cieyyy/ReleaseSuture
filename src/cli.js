@@ -5,7 +5,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { renderMarkdown } from './lib/report.js';
 import { scanCase } from './scan-case.js';
 
-const HELP = `ReleaseSuture v0.1.0
+const HELP = `ReleaseSuture v0.1.1
 
 Offline-only release evidence compiler.
 
@@ -46,7 +46,7 @@ async function main() {
     return;
   }
   if (args.includes('--version')) {
-    process.stdout.write('0.1.0\n');
+    process.stdout.write('0.1.1\n');
     return;
   }
 

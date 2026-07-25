@@ -32,11 +32,12 @@ test('desktop service rejects a report directory inside the evidence directory',
 });
 
 test('desktop renderer and IPC use restrictive Electron security settings', async () => {
-  const [main, preload, html, renderer, packager] = await Promise.all([
+  const [main, preload, html, renderer, styles, packager] = await Promise.all([
     readFile(path.resolve('desktop/main.js'), 'utf8'),
     readFile(path.resolve('desktop/preload.cjs'), 'utf8'),
     readFile(path.resolve('desktop/index.html'), 'utf8'),
     readFile(path.resolve('desktop/renderer.js'), 'utf8'),
+    readFile(path.resolve('desktop/styles.css'), 'utf8'),
     readFile(path.resolve('scripts/package-desktop.mjs'), 'utf8'),
   ]);
 
@@ -59,7 +60,21 @@ test('desktop renderer and IPC use restrictive Electron security settings', asyn
   assert.match(html, /connect-src 'none'/);
   assert.match(html, /object-src 'none'/);
   assert.match(html, /frame-src 'none'/);
+  assert.match(html, /data-view="report"/);
+  assert.match(html, /data-view="plan"/);
+  assert.match(html, /data-view-panel="report"/);
+  assert.match(html, /data-view-panel="plan"/);
   assert.doesNotMatch(html, /https?:\/\//);
+  assert.match(renderer, /function showView\(/);
+  assert.match(renderer, /function renderReleasePlan\(/);
+  assert.match(renderer, /function focusFinding\(/);
+  assert.match(renderer, /state\.result = result/);
+  assert.match(renderer, /showView\('report'\)/);
+  assert.match(styles, /height:\s*calc\(100dvh - 260px\)/);
+  assert.match(styles, /\.findings-list\s*\{[\s\S]*?flex:\s*1 1 auto/);
+  assert.doesNotMatch(styles, /\.findings-list\s*\{[^}]*max-height:\s*460px/);
+  assert.match(styles, /\.finding-explanation\s*\{[^}]*font-size:\s*14px/);
+  assert.match(styles, /\.evidence\s*\{[^}]*font:\s*12px\/1\.7/);
   assert.doesNotMatch(renderer, /\b(?:fetch|WebSocket|XMLHttpRequest)\b/);
   assert.doesNotMatch(renderer, /\.innerHTML\s*=/);
 });

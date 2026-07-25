@@ -18,10 +18,16 @@
         </div>
       </div>
 
-      <nav aria-label="应用状态">
-        <div class="nav-item active"><span class="nav-dot"></span>证据扫描</div>
-        <div class="nav-item"><span class="nav-dot"></span>风险报告</div>
-        <div class="nav-item"><span class="nav-dot"></span>发布顺序</div>
+      <nav aria-label="页面导航">
+        <button class="nav-item active" type="button" data-view="scan" aria-current="page">
+          <span class="nav-dot"></span>证据扫描
+        </button>
+        <button class="nav-item" type="button" data-view="report" disabled>
+          <span class="nav-dot"></span>风险报告
+        </button>
+        <button class="nav-item" type="button" data-view="plan" disabled>
+          <span class="nav-dot"></span>发布顺序
+        </button>
       </nav>
 
       <div class="safety-card">
@@ -29,7 +35,7 @@
         <p>无网络 · 无集群连接<br>无外部命令 · 无自动修改</p>
       </div>
 
-      <div class="version">v0.1.0 Desktop</div>
+      <div class="version">v0.1.1 Desktop</div>
     </aside>
 
     <main>
@@ -42,6 +48,7 @@
         <div class="security-badge"><span>✓</span> 安全边界已启用</div>
       </header>
 
+      <div class="view-panel" id="view-scan" data-view-panel="scan">
       <section class="input-panel" aria-labelledby="scan-config-title">
         <div class="section-heading">
           <div>
@@ -80,13 +87,29 @@
         </div>
       </section>
 
-      <section class="result-panel hidden" id="result-panel" aria-live="polite">
+      <section class="scan-complete hidden" id="scan-complete" aria-live="polite">
+        <div>
+          <strong>报告已生成并载入桌面软件</strong>
+          <p>可从左侧导航或下方按钮查看风险报告与发布顺序。</p>
+        </div>
+        <div class="scan-complete-actions">
+          <button class="secondary-button" type="button" data-open-view="report">查看风险报告</button>
+          <button class="secondary-button" type="button" data-open-view="plan">查看发布顺序</button>
+        </div>
+      </section>
+      </div>
+
+      <div class="view-panel hidden" id="view-report" data-view-panel="report">
+      <section class="result-panel" id="result-panel" aria-live="polite">
         <div class="section-heading">
           <div>
             <span class="step-number">02</span>
-            <h2>鉴定结果</h2>
+            <h2>风险报告</h2>
           </div>
-          <span class="report-location" id="report-location"></span>
+          <div class="report-heading-meta">
+            <span class="report-loaded-label">✓ 报告已载入当前界面</span>
+            <span class="report-location" id="report-location"></span>
+          </div>
         </div>
 
         <div class="summary-grid">
@@ -110,6 +133,25 @@
         </div>
         <div class="findings-list" id="findings-list"></div>
       </section>
+      </div>
+
+      <div class="view-panel hidden" id="view-plan" data-view-panel="plan">
+      <section class="release-panel" aria-live="polite">
+        <div class="section-heading">
+          <div>
+            <span class="step-number">03</span>
+            <h2>发布顺序</h2>
+          </div>
+          <span class="hint">人工评审顺序 · 工具不会执行</span>
+        </div>
+
+        <div class="plan-intro">
+          <strong id="plan-summary">等待生成报告</strong>
+          <p>点击任一步骤可展开门禁与关联阻断项；点击阻断项可跳回风险报告定位证据。</p>
+        </div>
+        <div class="release-list" id="release-list"></div>
+      </section>
+      </div>
     </main>
   </div>
 
